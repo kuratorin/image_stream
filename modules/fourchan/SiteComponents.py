@@ -2,6 +2,7 @@
 
 import re
 import urllib.request
+import modules.urls
 
 fourchan_base_url = "https://boards.4chan.org/"
 fourchan_cdn_url = "https://i.4cdn.org/"
@@ -11,7 +12,22 @@ class Component:
 
     def __init__(self, url):
         self.url = url
-        self.used = False
+        if self.alive:
+            self.used = False
+        else:
+            self.used = True
+
+    def __str__(self):
+        return self.url
+
+    @property
+    def alive(self):
+        http_response = urllib.request.urlopen(self.url)
+        if http_response.getcode() == 200:
+            return True
+        else:
+            return False
+
 
     @property
     def content_type(self):
@@ -48,25 +64,34 @@ class Thread(Component):
 class Board(Component):
     def __init__(self, url):
         super(Board, self).__init__(url)
-        self.id = self.get_board_id()
         self.threads = list()
+        self.known_thread_links = list()
 
-    def get_board_id(self):
+    @property
+    def id(self):
         re_board_letter = re.compile("/[a-z,0-9]{1,3}/")
         board_letter = re_board_letter.findall(self.url)[0]
         board_letter = board_letter.partition("/")[-1].partition("/")[0]
 
         return board_letter
 
-    def get_threads(self, max_amount=5):
-        links = list()
+    def fetch_new_threads(self, max_amount=5):
         re_thread_links = re.compile("thread/\d*")
-        board_main_html = download.get_html_as_string_from_url(self.url)
-        rel_links = get_links_from_html(board_main_html, pattern=re_thread_links)
-        for rel_link in rel_links:
-            abs_link = board_link + rel_link
-            links.append(abs_link)
-        self.threads = links
+        new_threads = list()
+        board_main_html = self.content
+        fetched_rel_links = modules.urls.get_links_from_html(board_main_html, pattern=re_thread_links)
+
+        for rel_link in fetched_rel_links:
+            if (len(new_threads) < max_amount):
+                abs_link = self.url + rel_link
+                if not abs_link in self.known_thread_links:
+                    self.known_thread_links.append(abs_link)
+                    new_thread = Thread(abs_link)
+                    new_threads.append(new_thread)
+            else:
+                break
+
+        self.threads += new_threads
 
 
 class MediaComponent(Component):
@@ -82,9 +107,3 @@ class Picture(MediaComponent):
 class JPG(Picture):
     def __init__(self, url):
         super(JPG, self).__init__(url)
-
-
-c = Board("https://boards.4chan.org/b/")
-
-print(c.content_type)
-print(c.content)
