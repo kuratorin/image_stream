@@ -36,10 +36,11 @@ def main():
 
     while(True):
         for board in boards:
-            board.fetch_new_threads(3)
-            for thread in board.threads:
-                print(thread)
-            print(len(board.threads))
+            board.fetch_new_threads(2)
+
+            current_thread = board.pop_thread()
+            current_thread.prepare()
+
 
         # current_jpg_links = urls.get_jpg_links(boards=['fa',''])
         # new_jpg_links = current_jpg_links.difference(set(known_jpg_links))
