@@ -1,8 +1,5 @@
 import os
-import time
 
-import modules.urls as urls
-import modules.download as download
 import modules.fourchan as fourchan
 import modules.fourchan.SiteComponents as SiteComponents
 
@@ -36,10 +33,9 @@ def main():
 
     while(True):
         for board in boards:
-            board.fetch_new_threads(2)
+            board.prepare()
 
-            current_thread = board.pop_thread()
-            current_thread.prepare()
+            # gui.display(current_thread.jpgs)
 
 
         # current_jpg_links = urls.get_jpg_links(boards=['fa',''])
