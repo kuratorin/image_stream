@@ -58,7 +58,7 @@ class Board(Component):
 
     def __init__(self, url):
         super(Board, self).__init__(url)
-        self.threads = list()
+        self.threads = []
         self.known_thread_links = list()
 
     @property
@@ -125,7 +125,9 @@ class MediaComponent(Component):
         if self.alive:
             filename = self.url.rpartition("/")[-1]
             print("{} downloading...".format(self.url))
-            urllib.request.urlretrieve(self.url, filename)
+            http_response = urllib.request.urlopen(self.url)
+            print(http_response.read())
+            # urllib.request.urlretrieve(self.url, filename)
             self.downloaded = True
         else:
             self.used = True
