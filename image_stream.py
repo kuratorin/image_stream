@@ -1,7 +1,26 @@
+import logging
 import os
-
+import urllib.error
 import modules.fourchan as fourchan
 import modules.fourchan.SiteComponents as SiteComponents
+
+
+# create logger with 'spam_application'
+logger = logging.getLogger('debug')
+logger.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+# fh = logging.FileHandler('spam.log')
+# fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+# add the handlers to the logger
+# logger.addHandler(fh)
+logger.addHandler(ch)
 
 download_dir = "download"
 
@@ -11,20 +30,13 @@ def setup_download_dir():
     except OSError:
         return
 
+
 def setup():
     setup_download_dir()
     return
 
+
 def main():
-    ordered_image_links = list()
-    images_to_downloaded = list()
-    images_downloaded = list()
-    images_showen = list()
-
-    current_jpg_links = set()
-    known_jpg_links = set()
-    new_jpg_links = list()
-
     boards = list()
     for board_id in fourchan.BOARDS:
         board_url = fourchan.SITE_URL + board_id + "/"
@@ -32,34 +44,27 @@ def main():
         boards.append(board)
 
     while(True):
-        for board in boards:
-            board.prepare()
+        try:
+            for board in boards:
+                logger.info("---------- preparing board ----------")
+                board.prepare()
+                logger.info("---------- board prepared ----------")
+                i = 0
+                for i in range(0, 2):
+                    thread = board.pop_thread()
+                    logger.info("---------- preparig thread ----------")
+                    thread.prepare()
+                    logger.info("---------- thread prepared ----------")
+                    i += i
+                    logger.debug("popping jpg {}".format(thread.pop_jpg()))
 
-            # gui.display(current_thread.jpgs)
-
-
-        # current_jpg_links = urls.get_jpg_links(boards=['fa',''])
-        # new_jpg_links = current_jpg_links.difference(set(known_jpg_links))
-        # print("{} new jpg links found".format(len(new_jpg_links)))
-        #
-        # for i, jpg_link in enumerate(new_jpg_links):
-        #     print("[{} / {} / {}] {} downloading...".format(
-        #         str(len(known_jpg_links)).zfill(4),
-        #         str(i).zfill(4),
-        #         str(len(new_jpg_links)).zfill(4),
-        #         jpg_link))
-        #     jpg = download.download_jpg(jpg_link)
-        #     if jpg:
-        #         known_jpg_links.add(jpg_link)
-        #
-        # print("Picture batch downloaded!!!!!!!!")
-        # print("Picture batch downloaded!!!!!!!!")
-        # print("Picture batch downloaded!!!!!!!!")
-        # print("Picture batch downloaded!!!!!!!!")
-        # print("Picture batch downloaded!!!!!!!!")
-        #
-        # time.sleep(5)
-
+                    # gui.display(thread.pop_jpg)
+        except ConnectionResetError:
+            logger.ERROR("Connection Error")
+            logger.info("now retrying...")
+        except urllib.error.URLError:
+            logger.ERROR("Connection Error")
+            logger.info("now retrying...")
 
 setup()
 main()

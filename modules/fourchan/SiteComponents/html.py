@@ -1,8 +1,10 @@
+import logging
 import re
 import modules.urls
 from .abstract import HTMLComponent
 from .media import JPG
 
+logger = logging.getLogger('debug')
 
 class Board(HTMLComponent):
     def __init__(self, url):
@@ -16,9 +18,11 @@ class Board(HTMLComponent):
 
     @property
     def thread_links(self):
-        re_thread_links = re.compile("https://*thread/\d*")
+        prefix = "https://boards.4chan.org/" + self.board_id + "/"
+        re_string = "thread/\d*"
+        re_thread_links = re.compile(re_string)
         html = self.content
-        return modules.urls.get_links_from_html(html, pattern=re_thread_links)
+        return modules.urls.get_links_from_html(html, pattern=re_thread_links, prefix=prefix)
 
     def pop_thread(self):
         return self.threads[0]
@@ -47,7 +51,8 @@ class Board(HTMLComponent):
 
     def fetch_new_threads(self, n=1):
         new_threads = []
-        for link in self.thread_links:
+        thread_links = self.thread_links
+        for link in thread_links:
             if len(new_threads) < n:
                 if link not in self.known_thread_links:
                     self.known_thread_links.append(link)
@@ -68,9 +73,10 @@ class Thread(HTMLComponent):
 
     @property
     def jpg_links(self):
-        re_jpg_links = re.compile("https://*\d{4,16}.jpg")
+        prefix = "https:"
+        re_jpg_links = re.compile("//i.4cdn.org/[a-z,0-9]{1,3}/\d*\.jpg")
         html = self.content
-        return modules.urls.get_links_from_html(html, pattern=re_jpg_links)
+        return modules.urls.get_links_from_html(html, pattern=re_jpg_links, prefix=prefix)
 
     def prepare(self):
         self.fetch_new_jpgs()

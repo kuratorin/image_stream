@@ -5,18 +5,19 @@ fourchan_cdn_url = "https://i.4cdn.org/"
 download_dir = "download"
 
 
-def get_links_from_html(html, pattern=None):
-    if re:
-        re_rel_thread_links = re.compile(pattern)
-        rel_thread_links = list()
-        unique_rel_thread_links = list()
+def get_links_from_html(html, pattern=None, prefix=None):
+    if pattern:
+        re_links = re.compile(pattern)
+        links = list()
+        unique_links = list()
+        for link in re_links.findall(html):
+            if prefix:
+                link = prefix + link
+            links.append(link)
 
-        for rel_thread_link in re_rel_thread_links.findall(html):
-            rel_thread_links.append(rel_thread_link)
+        for link in set(links):
+            unique_links.append(link)
 
-        for unique_rel_thread_link in set(rel_thread_links):
-            unique_rel_thread_links.append(unique_rel_thread_link)
-
-        return unique_rel_thread_links
+        return unique_links
     else:
         raise Exception()
