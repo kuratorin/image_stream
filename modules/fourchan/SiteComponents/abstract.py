@@ -2,9 +2,8 @@
 
 import logging
 import re
-# import requests
-import urllib.request
-import urllib.error
+import requests
+import requests.exceptions
 
 fourchan_base_url = "https://boards.4chan.org/"
 fourchan_cdn_url = "https://i.4cdn.org/"
@@ -27,8 +26,11 @@ class Component:
     def http_response(self):
         logger.info("{}'s http_response has been requested".format(self))
         try:
-            return urllib.request.urlopen(self.url)
-        except urllib.error.HTTPError:
+            r = requests.get(self.url, timeout=2.0)
+            return r
+        except requests.exceptions.RequestException:
+            logger.error("error while http request".format(self))
+
             return None
 
     @property
@@ -41,14 +43,12 @@ class Component:
 
     @property
     def http_code(self):
-        logger.info("{}'s http_code has been requested".format(self))
-        if self.is_alive:
-            return self.http_response.getcode()
+        return self.http_response.status_code
 
     @property
     def content_type(self):
         logger.info("{}'s http_response has been requested".format(self))
-        return self.http_response.info().get("Content-Type")
+        return self.http_response.headers["Content-Type"]
 
     # abstract
     @property
@@ -77,8 +77,7 @@ class HTMLComponent(Component):
     @property
     def content(self):
         logger.info("{}'s content has been requested".format(self))
-        http_response = urllib.request.urlopen(self.url)
-        return http_response.read().decode("utf8")
+        return self.http_response.text
 
 
 class MediaComponent(Component):
@@ -95,18 +94,19 @@ class MediaComponent(Component):
             self.download()
         return self.downloaded_data
 
+    @property
+    def filename(self):
+        raise NotImplementedError
+
     def download(self):
-        # r = requests.get(settings.STATICMAP_URL.format(**data), stream=True)
-        # if r.status_code == 200:
-        #     with open(path, 'wb') as f:
-        #         for chunk in r.iter_content(1024):
-        #             f.write(chunk)
         logger.info("{}'s will be downloaded".format(self))
-        if self.is_alive:
-            filename = self.url.rpartition("/")[-1]
-            http_response = urllib.request.urlopen(self.url)
-            print(http_response.read())
-            # urllib.request.urlretrieve(self.url, filename)
-            self.downloaded = True
-        else:
+        try:
+            r = requests.get(self.url, stream=True)
+            if r.status_code == 200:
+                with open(self.filename, 'wb') as f:
+                    for chunk in r.iter_content(1024):
+                        f.write(chunk)
+                self.downloaded = True
+        except requests.exceptions.RequestException:
+            logger.error("download failed...")
             self.marked_as_can_be_deleted = True

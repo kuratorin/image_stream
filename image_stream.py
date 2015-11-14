@@ -1,6 +1,5 @@
 import logging
 import os
-import urllib.error
 import modules.fourchan as fourchan
 import modules.fourchan.SiteComponents as SiteComponents
 
@@ -44,27 +43,22 @@ def main():
         boards.append(board)
 
     while(True):
-        try:
-            for board in boards:
-                logger.info("---------- preparing board ----------")
-                board.prepare()
-                logger.info("---------- board prepared ----------")
-                i = 0
-                for i in range(0, 2):
-                    thread = board.pop_thread()
-                    logger.info("---------- preparig thread ----------")
-                    thread.prepare()
-                    logger.info("---------- thread prepared ----------")
-                    i += i
-                    logger.debug("popping jpg {}".format(thread.pop_jpg()))
-
-                    # gui.display(thread.pop_jpg)
-        except ConnectionResetError:
-            logger.ERROR("Connection Error")
-            logger.info("now retrying...")
-        except urllib.error.URLError:
-            logger.ERROR("Connection Error")
-            logger.info("now retrying...")
+        for board in boards:
+            logger.info("---------- preparing board ----------")
+            board.prepare()
+            logger.info("---------- board prepared ----------")
+            i = 0
+            for i in range(0, 2):
+                thread = board.pop_thread()
+                logger.info("---------- preparig thread ----------")
+                thread.prepare()
+                logger.info("---------- thread prepared ----------")
+                i += i
+                jpg = thread.pop_jpg()
+                while jpg:
+                    logger.debug("popping jpg {}".format(jpg))
+                    jpg = thread.pop_jpg()
+                    # gui.display(jpg)
 
 setup()
 main()

@@ -85,7 +85,8 @@ class Thread(HTMLComponent):
         self.prepared = True
 
     def fetch_new_jpgs(self):
-        for link in self.jpg_links:
+        for i,link in enumerate(self.jpg_links):
+            logger.info("{} fetching jpg {} of {}".format(self.url, str(i).zfill(3), str(len(self.jpg_links)).zfill(3)))
             if link not in self.known_jpg_links:
                 new_jpg = JPG(link)
                 self.jpgs.append(new_jpg)
