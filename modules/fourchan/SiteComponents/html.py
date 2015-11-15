@@ -25,7 +25,13 @@ class Board(HTMLComponent):
         return modules.urls.get_links_from_html(html, pattern=re_thread_links, prefix=prefix)
 
     def pop_thread(self):
-        return self.threads[0]
+        if len(self.threads) == 0:
+            self.fetch_new_threads(n=1)
+            self.prepare_threads(n=1)
+
+        thread = self.threads[0]
+        self.threads = self.threads[1:-1]
+        return thread
 
     def clean_threads_list(self):
         for thread in self.threads:
@@ -35,7 +41,7 @@ class Board(HTMLComponent):
     def prepare(self):
         self.clean_threads_list()
         while len(self.threads) < 2:
-            self.fetch_new_threads(n=1)
+            self.fetch_new_threads(n=2)
         self.prepare_threads(n=2)
 
     def prepare_threads(self, n=None):
@@ -45,7 +51,7 @@ class Board(HTMLComponent):
         """
         if not n:
             n = self.number_of_threads
-        for thread in self.threads[0:n]:
+        for thread in self.threads[0:n-1]:
             if not thread.prepared:
                 thread.prepare()
 
@@ -67,6 +73,7 @@ class Board(HTMLComponent):
 class Thread(HTMLComponent):
     def __init__(self, url):
         super(Thread, self).__init__(url)
+        # list of JPG objects
         self.jpgs = []
         self.known_jpg_links = set()
         self.prepared = False
@@ -85,8 +92,12 @@ class Thread(HTMLComponent):
         self.prepared = True
 
     def fetch_new_jpgs(self):
-        for i,link in enumerate(self.jpg_links):
-            logger.info("{} fetching jpg {} of {}".format(self.url, str(i).zfill(3), str(len(self.jpg_links)).zfill(3)))
+        jpg_links = self.jpg_links
+        for i, link in enumerate(jpg_links):
+            logger.info("{} fetching jpg {} of {}".format(
+                self.url,
+                str(i+1).zfill(3),
+                str(len(jpg_links)).zfill(3)))
             if link not in self.known_jpg_links:
                 new_jpg = JPG(link)
                 self.jpgs.append(new_jpg)
@@ -94,6 +105,8 @@ class Thread(HTMLComponent):
 
     def pop_jpg(self):
         # view needs to call .set_used() on jpg
-        for jpg in self.jpgs:
-            if not jpg.marked_as_can_be_deleted:
+        for i in range(0, len(self.jpgs)):
+            if not self.jpgs[i].marked_as_can_be_deleted:
+                jpg = self.jpgs[i]
+                self.jpgs[i].set_used()
                 return jpg

@@ -23,7 +23,7 @@ class JPG(Picture):
 
     @property
     def filename(self):
-        logger.info("{}'s filename has been requested".format(self))
+        logger.debug("{}'s filename has been requested".format(self))
         re_filename = re.compile("\d*.jpg")
         filename = re_filename.findall(self.url)[0]
 

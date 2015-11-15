@@ -56,7 +56,7 @@ def main():
                 i += i
                 jpg = thread.pop_jpg()
                 while jpg:
-                    logger.debug("popping jpg {}".format(jpg))
+                    logger.info("popping jpg {}".format(jpg))
                     jpg = thread.pop_jpg()
                     # gui.display(jpg)
 
