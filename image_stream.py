@@ -2,7 +2,8 @@ import logging
 import os
 import modules.fourchan as fourchan
 import modules.fourchan.SiteComponents as SiteComponents
-
+import tkinter
+from PIL import ImageTk, Image
 
 # create logger with 'spam_application'
 logger = logging.getLogger('debug')
@@ -23,6 +24,37 @@ logger.addHandler(ch)
 
 download_dir = "download"
 
+class App():
+    def __init__(self):
+        self.root = tkinter.Tk()
+        image1=Image.open('test.jpg')
+        self.root.geometry("{0}x{1}+0+0".format(self.root.winfo_screenwidth(), self.root.winfo_screenheight()))
+        self.tkpi=ImageTk.PhotoImage(image1)
+        label_image=tkinter.Label(self.root, image=self.tkpi)
+        label_image.place(x=self.root.winfo_screenwidth()/2,y=self.root.winfo_screenwidth()/2,width=image1.size[0],height=image1.size[1])
+
+        self.displayed_images = []
+        self.update_image()
+        self.root.mainloop()
+
+
+    def update_image(self):
+        current_image=Image.open(self.get_image_path())
+        self.tkpi=ImageTk.PhotoImage(current_image)
+        label_image=tkinter.Label(self.root, image=self.tkpi)
+        label_image.place(relx=0.5,rely=0.5,anchor='center')
+
+        print("slide")
+        self.root.after(500, self.update_image)
+
+    def get_image_path(self):
+        for file_path in os.listdir("./"):
+            if file_path.endswith(".jpg"):
+                if file_path not in self.displayed_images:
+                    self.displayed_images.append(file_path)
+                    return file_path
+
+
 def setup_download_dir():
     try:
         os.mkdir(download_dir)
@@ -31,7 +63,7 @@ def setup_download_dir():
 
 
 def setup():
-    setup_download_dir()
+
     return
 
 
@@ -60,5 +92,6 @@ def main():
                     jpg = thread.pop_jpg()
                     # gui.display(jpg)
 
+app = App()
 setup()
 main()
