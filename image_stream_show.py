@@ -111,6 +111,6 @@ def main():
                     time.sleep(0.2)
                     # gui.display(jpg)
 
-#app = App()
+app = App()
 setup()
 main()
